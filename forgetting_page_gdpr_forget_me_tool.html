@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Forgot Password</title>
+  <meta name="description" content="Reset your password securely using a 6-digit OTP sent to email or phone." />
+  <style>
+    :root{
+      --bg:#0f172a; --card:#0b1220; --muted:#9aa4bf; --accent:#6ee7b7; --danger:#ff6b6b;
+      --glass: rgba(255,255,255,0.04);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; background: radial-gradient(1200px 400px at 10% 10%, rgba(110,231,183,0.06), transparent),
+                 linear-gradient(180deg,#071028 0%, #081026 40%, #07102a 100%);
+      color:#e6eef8; display:flex; align-items:center; justify-content:center; padding:32px;
+    }
+    .container{width:100%;max-width:420px}
+    .card{
+      background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01));
+      border-radius:16px;padding:28px;box-shadow:0 8px 30px rgba(2,6,23,0.6);border:1px solid rgba(255,255,255,0.03);
+    }
+    header{text-align:center;margin-bottom:24px}
+    .logo{width:48px;height:48px;border-radius:12px;background:linear-gradient(135deg,var(--accent),#60a5fa);display:flex;align-items:center;justify-content:center;font-weight:700;color:#052018;margin:0 auto 10px}
+    h1{font-size:22px;margin:0 0 6px 0}
+    p{margin:0;color:var(--muted);font-size:13px}
+    label{display:block;font-size:13px;margin-bottom:6px}
+    input[type=text], input[type=email], input[type=tel], input[type=password], input[type=number]{width:100%;padding:10px 12px;border-radius:10px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:inherit;outline:none;font-size:14px;text-align:center;}
+    input#otp{font-weight:600;font-size:18px;letter-spacing:6px;text-align:center;}
+    .actions{display:flex;gap:10px;margin-top:16px}
+    button{border:0;padding:10px 14px;border-radius:10px;font-weight:600;cursor:pointer;width:100%}
+    .btn-primary{background:linear-gradient(90deg,var(--accent),#34d399);color:#032018}
+    .btn-ghost{background:transparent;border:1px solid rgba(255,255,255,0.04);color:var(--muted)}
+    .status{margin-top:12px;font-size:13px;text-align:center}
+    .switch{text-align:center;margin-top:12px;font-size:13px}
+    a{color:var(--accent);text-decoration:none}
+  </style>
+</head>
+<body>
+  <main class="container">
+    <div class="card">
+      <header>
+        <div class="logo">P</div>
+        <h1>Forgot Password</h1>
+        <p>Enter your email or phone number to get a 6-digit OTP and reset your password.</p>
+      </header>
+
+      <form id="forgotForm" autocomplete="on">
+        <label for="contact">Email or Phone Number</label>
+        <input id="contact" name="contact" type="text" placeholder="you@example.com or +91XXXXXXXXXX" required />
+
+        <div class="actions">
+          <button type="submit" class="btn-primary">Send OTP</button>
+        </div>
+
+        <!-- OTP input now visible from the start -->
+        <div id="otpInputContainer" style="margin-top:16px;">
+          <label for="otp">Enter 6-digit OTP</label>
+          <input id="otp" name="otp" type="number" placeholder="123456" maxlength="6" oninput="if(this.value.length>6)this.value=this.value.slice(0,6);" />
+        </div>
+
+        <!-- Password reset section -->
+        <div id="resetSection" style="margin-top:20px;">
+          <label for="newPassword">New Password</label>
+          <input id="newPassword" name="newPassword" type="password" placeholder="Enter new password" />
+
+          <div class="actions">
+            <button type="button" id="verifyOtpBtn" class="btn-primary">Verify OTP & Reset Password</button>
+          </div>
+        </div>
+
+        <div id="response" class="status" aria-live="polite"></div>
+      </form>
+
+      <div class="switch">
+        <p><a href="login.html">Back to Login</a> or <a href="signup.html">Create an Account</a></p>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    const form = document.getElementById('forgotForm');
+    const resp = document.getElementById('response');
+    const verifyOtpBtn = document.getElementById('verifyOtpBtn');
+
+    function showMessage(msg, ok=true){
+      resp.textContent = msg;
+      resp.style.color = ok ? 'var(--accent)' : 'var(--danger)';
+    }
+
+    form.addEventListener('submit', async (e)=>{
+      e.preventDefault();
+      const contact = form.contact.value.trim();
+      if(!contact){ showMessage('Please enter your email or phone number.', false); return; }
+      showMessage('Sending 6-digit OTP…');
+
+      try{
+        const res = await fetch('/api/auth/send-otp', {
+          method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({contact})
+        });
+        if(!res.ok){ showMessage('Server error: '+res.status, false); return; }
+        const j = await res.json();
+        if(j.ok){
+          showMessage('6-digit OTP sent successfully! Check your email or SMS.');
+        }else{
+          showMessage(j.message || 'Failed to send OTP.', false);
+        }
+      }catch(err){
+        console.error(err);
+        showMessage('Network error — please try again later.', false);
+      }
+    });
+
+    verifyOtpBtn.addEventListener('click', async ()=>{
+      const otp = document.getElementById('otp').value.trim();
+      const newPassword = document.getElementById('newPassword').value.trim();
+      const contact = document.getElementById('contact').value.trim();
+
+      if(otp.length !== 6){ showMessage('Please enter a valid 6-digit OTP.', false); return; }
+      if(!newPassword){ showMessage('Please enter a new password.', false); return; }
+
+      showMessage('Verifying 6-digit OTP…');
+
+      try{
+        const res = await fetch('/api/auth/verify-otp', {
+          method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({contact, otp, newPassword})
+        });
+        if(!res.ok){ showMessage('Server error: '+res.status, false); return; }
+        const j = await res.json();
+        if(j.ok){
+          showMessage('Password reset successful! You can now log in.', true);
+          form.reset();
+        }else{
+          showMessage(j.message || 'Invalid OTP or request failed.', false);
+        }
+      }catch(err){
+        console.error(err);
+        showMessage('Network error — please try again later.', false);
+      }
+    });
+  </script>
+</body>
+</html>
