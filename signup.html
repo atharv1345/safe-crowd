@@ -4,17 +4,17 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Sign Up</title>
-  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="signup.css" />
 </head>
 <body>
-  <div class="page">
+  <div class="container">
     <div class="card-wrapper">
       <div class="card">
         <div class="card-content">
           <h2 class="subtitle">Welcome to the Sign Up Portal</h2>
           <h1 class="title">Sign Up</h1>
 
-          <form id="signupForm">
+          <form id="signup-form">
             <div class="field">
               <label for="name">Full Name</label>
               <input type="text" id="name" name="name" placeholder="John Doe" required />
@@ -33,10 +33,10 @@
               </div>
             </div>
 
-            <button type="submit" class="primary-btn">Create Account</button>
+            <button type="submit" class="btn-primary">Create Account</button>
           </form>
 
-          <p class="footer-text">
+          <p class="footer">
             Already have an account?
             <a href="/login">Log in</a>
           </p>
@@ -45,6 +45,6 @@
     </div>
   </div>
 
-  <script src="script.js"></script>
+  <script src="signup.js"></script>
 </body>
 </html>
